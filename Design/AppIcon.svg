@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a2557"/>
+      <stop offset="1" stop-color="#0b1020"/>
+    </linearGradient>
+    <radialGradient id="face" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#16213a"/>
+      <stop offset="1" stop-color="#0a1020"/>
+    </radialGradient>
+    <radialGradient id="shine" cx="0.3" cy="0.15" r="0.8">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bugBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff6b6b"/>
+      <stop offset="1" stop-color="#d1201f"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- background squircle -->
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="url(#shine)"/>
+
+  <!-- faint code lines in the background -->
+  <g font-family="Menlo, Monaco, 'Courier New', monospace" font-size="44" fill="#ffffff" fill-opacity="0.07">
+    <text x="70" y="120">while (true) {</text>
+    <text x="120" y="180">  sleep(8h);</text>
+    <text x="70" y="960">} // TODO: log time</text>
+  </g>
+
+  <!-- clock -->
+  <g filter="url(#shadow)">
+    <circle cx="512" cy="536" r="332" fill="url(#face)" stroke="#22c55e" stroke-width="30"/>
+  </g>
+  <circle cx="512" cy="536" r="300" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="2"/>
+
+  <!-- ticks -->
+  <g stroke="#94a3b8" stroke-linecap="round">
+    <g stroke-width="8">
+      <line x1="512" y1="270" x2="512" y2="240" transform="rotate(30 512 536)"/>
+      <line x1="512" y1="270" x2="512" y2="240" transform="rotate(60 512 536)"/>
+      <line x1="512" y1="270" x2="512" y2="240" transform="rotate(120 512 536)"/>
+      <line x1="512" y1="270" x2="512" y2="240" transform="rotate(150 512 536)"/>
+      <line x1="512" y1="270" x2="512" y2="240" transform="rotate(210 512 536)"/>
+      <line x1="512" y1="270" x2="512" y2="240" transform="rotate(240 512 536)"/>
+      <line x1="512" y1="270" x2="512" y2="240" transform="rotate(300 512 536)"/>
+      <line x1="512" y1="270" x2="512" y2="240" transform="rotate(330 512 536)"/>
+    </g>
+  </g>
+
+  <!-- code "numerals" -->
+  <g font-family="Menlo, Monaco, 'Courier New', monospace" font-weight="bold" fill="#e2e8f0" text-anchor="middle">
+    <text x="512" y="330" font-size="120">{</text>
+    <text x="512" y="806" font-size="120">}</text>
+    <text x="748" y="574" font-size="96">;</text>
+    <text x="290" y="570" font-size="84">&lt;/&gt;</text>
+  </g>
+
+  <!-- hands: 16:00 (hour hand at 4, minute at 12) -->
+  <g stroke-linecap="round">
+    <line x1="512" y1="536" x2="512" y2="330" stroke="#ffffff" stroke-width="26" transform="rotate(120 512 536)"/>
+    <line x1="512" y1="536" x2="512" y2="285" stroke="#ffffff" stroke-width="18"/>
+    <line x1="512" y1="580" x2="512" y2="270" stroke="#22c55e" stroke-width="9" transform="rotate(230 512 536)"/>
+    <circle cx="512" cy="536" r="22" fill="#22c55e"/>
+    <circle cx="512" cy="536" r="9" fill="#0a1020"/>
+  </g>
+
+  <!-- blinking terminal cursor under the center -->
+  <rect x="470" y="640" width="48" height="16" fill="#22c55e" filter="url(#glow)"/>
+  <rect x="524" y="640" width="30" height="16" fill="#22c55e" fill-opacity="0.35"/>
+
+  <!-- ladybug (the bug that eats your time) sitting on the rim, upper right -->
+  <g transform="translate(768 322) rotate(35)" filter="url(#shadow)">
+    <!-- legs -->
+    <g stroke="#111827" stroke-width="10" stroke-linecap="round" fill="none">
+      <path d="M-60 -20 l-40 -22 l-10 -26"/>
+      <path d="M-66 20 l-44 8 l-22 24"/>
+      <path d="M-54 58 l-36 32 l-4 30"/>
+      <path d="M60 -20 l40 -22 l10 -26"/>
+      <path d="M66 20 l44 8 l22 24"/>
+      <path d="M54 58 l36 32 l4 30"/>
+    </g>
+    <!-- body -->
+    <ellipse cx="0" cy="10" rx="92" ry="112" fill="url(#bugBody)" stroke="#7f1d1d" stroke-width="6"/>
+    <line x1="0" y1="-96" x2="0" y2="122" stroke="#111827" stroke-width="8"/>
+    <circle cx="-42" cy="-30" r="17" fill="#111827"/>
+    <circle cx="44" cy="-24" r="17" fill="#111827"/>
+    <circle cx="-52" cy="40" r="15" fill="#111827"/>
+    <circle cx="50" cy="46" r="15" fill="#111827"/>
+    <circle cx="-26" cy="88" r="12" fill="#111827"/>
+    <circle cx="26" cy="90" r="12" fill="#111827"/>
+    <ellipse cx="-40" cy="-60" rx="22" ry="12" fill="#ffffff" fill-opacity="0.25" transform="rotate(-25 -40 -60)"/>
+    <!-- head -->
+    <circle cx="0" cy="-118" r="46" fill="#111827"/>
+    <circle cx="-18" cy="-128" r="11" fill="#ffffff"/>
+    <circle cx="18" cy="-128" r="11" fill="#ffffff"/>
+    <circle cx="-15" cy="-126" r="5.5" fill="#111827"/>
+    <circle cx="21" cy="-126" r="5.5" fill="#111827"/>
+    <path d="M-14 -104 q14 12 28 0" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <!-- antennae -->
+    <g stroke="#111827" stroke-width="9" stroke-linecap="round" fill="none">
+      <path d="M-26 -156 q-14 -34 -44 -44"/>
+      <path d="M26 -156 q14 -34 44 -44"/>
+      <circle cx="-72" cy="-202" r="10" fill="#111827"/>
+      <circle cx="72" cy="-202" r="10" fill="#111827"/>
+    </g>
+  </g>
+</svg>
