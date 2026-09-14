@@ -10,7 +10,7 @@ YouTrack tickets during the day and logging it to YouTrack at the end of the day
 | Tile | Meaning |
 | --- | --- |
 | Tracked this month | Hours already logged to YouTrack this month (+ today's pending time). |
-| Working hours this month | Working days in the month × 8 h. Weekends and Czech public holidays (incl. Good Friday and Easter Monday) are excluded. |
+| Working hours this month | Working days in the month × 8 h. Weekends, Czech public holidays (incl. Good Friday and Easter Monday) and your vacation days are excluded. |
 | Expected until today | Working days from the 1st through today × 8 h. |
 | Ahead / Behind plan | `tracked + pending − expected`. |
 
@@ -33,6 +33,15 @@ YouTrack tickets during the day and logging it to YouTrack at the end of the day
   work type "Development" by default), records it locally, and resets the time
   in the list to 0. Tickets stay in the list so you can keep working on them
   tomorrow. If a ticket fails to log, its time is kept and the error is shown.
+
+**Vacations & days off**
+
+- The 🏖 toolbar button opens the vacation list. Add a period (from – to, optional
+  note); overlapping periods are fine.
+- Vacation days are not working days: they are subtracted from *Working hours
+  this month* and *Expected until today*, so being away never shows as
+  "behind plan". No 16:00 reminder is scheduled for those days, and the
+  dashboard shows "On vacation" while a period is active.
 
 **Sync**
 

@@ -16,12 +16,13 @@ enum NotificationScheduler {
         }
     }
 
-    /// Schedules one reminder per upcoming working day (weekends and Czech holidays are skipped).
-    static func reschedule(hour: Int, minute: Int) async {
+    /// Schedules one reminder per upcoming working day. `isWorkDay` decides which days count
+    /// (weekends, Czech holidays and the user's vacations are skipped).
+    static func reschedule(hour: Int, minute: Int, isWorkDay: @Sendable (Date) -> Bool) async {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
         let cal = CzechCalendar.calendar
-        for day in CzechCalendar.nextWorkingDays(from: Date(), count: 20) {
+        for day in CzechCalendar.nextDays(from: Date(), count: 20, where: isWorkDay) {
             var comps = cal.dateComponents([.year, .month, .day], from: day)
             comps.hour = hour
             comps.minute = minute

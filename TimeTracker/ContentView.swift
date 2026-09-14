@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AppStore.self) private var store
     @State private var showAdd = false
+    @State private var showVacations = false
     @State private var selection: Set<Ticket.ID> = []
 
     private let ticker = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
@@ -69,6 +70,12 @@ struct ContentView: View {
                     .help("Add a ticket (⌘N)")
             }
             ToolbarItem {
+                Button { showVacations = true } label: {
+                    Label("Vacations", systemImage: "beach.umbrella")
+                }
+                .help("Add vacation or days off (they don't count as working days)")
+            }
+            ToolbarItem {
                 Button { Task { await store.syncMonthFromYouTrack() } } label: {
                     Label("Sync from YouTrack", systemImage: "arrow.triangle.2.circlepath")
                 }
@@ -84,6 +91,7 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $showAdd) { AddTicketSheet() }
+        .sheet(isPresented: $showVacations) { VacationSheet() }
         .sheet(isPresented: $store.showReview) { ReviewSheet() }
         .alert("Something went wrong", isPresented: Binding(
             get: { store.errorMessage != nil },
@@ -116,7 +124,11 @@ struct DashboardView: View {
                 Text(store.now, format: .dateTime.month(.wide).year())
                     .font(.title2.bold())
                 Spacer()
-                if let holiday = CzechCalendar.holidayName(on: store.now) {
+                if store.isOnVacation(store.now) {
+                    Label("On vacation", systemImage: "beach.umbrella")
+                        .foregroundStyle(.orange)
+                        .font(.callout)
+                } else if let holiday = CzechCalendar.holidayName(on: store.now) {
                     Label(holiday, systemImage: "party.popper")
                         .foregroundStyle(.secondary)
                         .font(.callout)
@@ -141,7 +153,9 @@ struct DashboardView: View {
                 StatTile(
                     title: "Working hours this month",
                     value: "\(store.workingHoursThisMonth)h",
-                    detail: "\(store.workingDaysThisMonth) working days × \(CzechCalendar.hoursPerDay)h",
+                    detail: store.vacationDaysThisMonth > 0
+                        ? "\(store.workingDaysThisMonth) working days × \(CzechCalendar.hoursPerDay)h · \(store.vacationDaysThisMonth) vacation"
+                        : "\(store.workingDaysThisMonth) working days × \(CzechCalendar.hoursPerDay)h",
                     tint: .secondary
                 )
                 StatTile(

@@ -106,12 +106,20 @@ enum CzechCalendar {
 
     /// The next `count` working days starting with `date` (inclusive).
     static func nextWorkingDays(from date: Date, count: Int) -> [Date] {
+        nextDays(from: date, count: count, where: isWorkingDay)
+    }
+
+    /// The next `count` days starting with `date` (inclusive) that satisfy `predicate`.
+    /// Gives up after two years to stay safe with a predicate that never matches.
+    static func nextDays(from date: Date, count: Int, where predicate: (Date) -> Bool) -> [Date] {
         let cal = calendar
         var result: [Date] = []
         var cursor = cal.startOfDay(for: date)
-        while result.count < count {
-            if isWorkingDay(cursor) { result.append(cursor) }
+        var scanned = 0
+        while result.count < count && scanned < 731 {
+            if predicate(cursor) { result.append(cursor) }
             cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
+            scanned += 1
         }
         return result
     }

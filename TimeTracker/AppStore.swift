@@ -11,6 +11,7 @@ final class AppStore {
 
     var tickets: [Ticket] { didSet { save() } }
     var log: [LogEntry] { didSet { save() } }
+    var vacations: [Vacation] { didSet { save(); rescheduleNotifications() } }
     var baseURL: String { didSet { save() } }
     var workTypeName: String { didSet { save(); workTypeCache.removeAll() } }
     var notificationHour: Int { didSet { save(); rescheduleNotifications() } }
@@ -42,6 +43,7 @@ final class AppStore {
         let state = Self.loadState()
         tickets = state.tickets
         log = state.log
+        vacations = state.vacations
         baseURL = state.baseURL
         workTypeName = state.workTypeName
         notificationHour = state.notificationHour
@@ -63,10 +65,48 @@ final class AppStore {
     /// Minutes added to tickets today but not yet confirmed/logged.
     var pendingMinutes: Int { tickets.map(\.minutes).reduce(0, +) }
 
-    var workingDaysThisMonth: Int { CzechCalendar.workingDays(inMonthOf: now) }
+    // MARK: Working days (calendar minus vacations)
+
+    func isOnVacation(_ date: Date) -> Bool {
+        vacations.contains { $0.contains(date) }
+    }
+
+    /// A day you are expected to log time on: weekday, not a Czech holiday, not on vacation.
+    func isWorkDay(_ date: Date) -> Bool {
+        CzechCalendar.isWorkingDay(date) && !isOnVacation(date)
+    }
+
+    /// Non-isolated snapshot of `isWorkDay` for use off the main actor (notification scheduling).
+    private var workDayPredicate: @Sendable (Date) -> Bool {
+        let vacations = self.vacations
+        return { date in CzechCalendar.isWorkingDay(date) && !vacations.contains { $0.contains(date) } }
+    }
+
+    /// Working days (weekday, not holiday) inside a vacation period.
+    func workingDays(in vacation: Vacation) -> Int {
+        let cal = CzechCalendar.calendar
+        var count = 0
+        var cursor = cal.startOfDay(for: vacation.start)
+        let end = cal.startOfDay(for: vacation.end)
+        while cursor <= end {
+            if CzechCalendar.isWorkingDay(cursor) { count += 1 }
+            cursor = cal.date(byAdding: .day, value: 1, to: cursor)!
+        }
+        return count
+    }
+
+    var workingDaysThisMonth: Int { CzechCalendar.days(inMonthOf: now).filter(isWorkDay).count }
     var workingHoursThisMonth: Int { workingDaysThisMonth * CzechCalendar.hoursPerDay }
 
-    var workingDaysUntilToday: Int { CzechCalendar.workingDays(inMonthOf: now, through: now) }
+    /// Vacation days this month that would otherwise have been working days.
+    var vacationDaysThisMonth: Int {
+        CzechCalendar.days(inMonthOf: now).filter { CzechCalendar.isWorkingDay($0) && isOnVacation($0) }.count
+    }
+
+    var workingDaysUntilToday: Int {
+        let today = CzechCalendar.calendar.startOfDay(for: now)
+        return CzechCalendar.days(inMonthOf: now).filter { $0 <= today && isWorkDay($0) }.count
+    }
     var expectedMinutesUntilToday: Int { workingDaysUntilToday * CzechCalendar.hoursPerDay * 60 }
 
     /// (logged + pending) − expected. Positive means ahead of plan.
@@ -78,7 +118,7 @@ final class AppStore {
         guard !started else { return }
         started = true
         notificationsAuthorized = await NotificationScheduler.requestAuthorization()
-        await NotificationScheduler.reschedule(hour: notificationHour, minute: notificationMinute)
+        await NotificationScheduler.reschedule(hour: notificationHour, minute: notificationMinute, isWorkDay: workDayPredicate)
         tick()
         if !token.isEmpty {
             await syncMonthFromYouTrack(silent: true)
@@ -89,7 +129,7 @@ final class AppStore {
     func tick() {
         now = Date()
         let todayKey = CzechCalendar.dayKey(now)
-        guard CzechCalendar.isWorkingDay(now), lastAutoReviewDay != todayKey else { return }
+        guard isWorkDay(now), lastAutoReviewDay != todayKey else { return }
         let comps = CzechCalendar.calendar.dateComponents([.hour, .minute], from: now)
         let nowMinutes = (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
         if nowMinutes >= notificationHour * 60 + notificationMinute {
@@ -100,7 +140,23 @@ final class AppStore {
 
     func rescheduleNotifications() {
         guard !loading else { return }
-        Task { await NotificationScheduler.reschedule(hour: notificationHour, minute: notificationMinute) }
+        let predicate = workDayPredicate
+        Task { await NotificationScheduler.reschedule(hour: notificationHour, minute: notificationMinute, isWorkDay: predicate) }
+    }
+
+    // MARK: Vacations
+
+    /// Adds a period; overlapping periods are allowed and simply counted once per day.
+    func addVacation(from start: Date, to end: Date, note: String) {
+        let cal = CzechCalendar.calendar
+        let s = cal.startOfDay(for: min(start, end))
+        let e = cal.startOfDay(for: max(start, end))
+        vacations.append(Vacation(start: s, end: e, note: note.trimmingCharacters(in: .whitespaces)))
+        vacations.sort { $0.start > $1.start }
+    }
+
+    func removeVacation(_ id: Vacation.ID) {
+        vacations.removeAll { $0.id == id }
     }
 
     // MARK: Tickets
@@ -295,6 +351,7 @@ final class AppStore {
         let state = PersistedState(
             tickets: tickets,
             log: log,
+            vacations: vacations,
             baseURL: baseURL,
             workTypeName: workTypeName,
             notificationHour: notificationHour,
